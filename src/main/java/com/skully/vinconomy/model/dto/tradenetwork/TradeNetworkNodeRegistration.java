@@ -1,4 +1,4 @@
-package com.skully.vinconomy.model.dto;
+package com.skully.vinconomy.model.dto.tradenetwork;
 
 import java.io.Serializable;
 
@@ -11,7 +11,7 @@ public class TradeNetworkNodeRegistration implements Serializable {
 	private String host;
 	private String ip;
 	private String username;
-	private String udpListenPort;
+	private int udpListenPort;
 	
 	public String getName() {
 		return name;
@@ -25,10 +25,10 @@ public class TradeNetworkNodeRegistration implements Serializable {
 	public void setGuid(String guid) {
 		this.guid = guid;
 	}
-	public String getUdpListenPort() {
+	public int getUdpListenPort() {
 		return udpListenPort;
 	}
-	public void setUdpListenPort(String udpListenPort) {
+	public void setUdpListenPort(int udpListenPort) {
 		this.udpListenPort = udpListenPort;
 	}
 	public String getHost() {

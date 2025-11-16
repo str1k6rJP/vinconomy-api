@@ -1,6 +1,7 @@
 package com.skully.vinconomy.security;
 
 import java.util.Collection;
+import java.util.Iterator;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.User;
@@ -42,6 +43,18 @@ public class ApiUserDetails extends User {
 
 	public void setAuthorizedByKey(boolean authorizedByKey) {
 		this.authorizedByKey = authorizedByKey;
+	}
+	
+	public boolean hasRole(String role) {
+		Collection<GrantedAuthority> auths = this.getAuthorities();
+		for (Iterator<GrantedAuthority> iterator = auths.iterator(); iterator.hasNext();) {
+			GrantedAuthority type = iterator.next();
+			if (type.getAuthority().equals(role)) {
+				return true;
+			}
+			
+		}
+		return false;
 	}
 	
 	

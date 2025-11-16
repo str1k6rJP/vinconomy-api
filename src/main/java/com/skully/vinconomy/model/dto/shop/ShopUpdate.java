@@ -1,4 +1,4 @@
-package com.skully.vinconomy.model.dto;
+package com.skully.vinconomy.model.dto.shop;
 
 import java.util.List;
 

@@ -8,7 +8,7 @@ $env:VINCONOMY_DB_USR="user";
 $env:VINCONOMY_DB_PORT="3307";
 
 try {
-    .\mvnw clean package;
+    .\mvnw clean package -P docker;
 }
 finally {
     Remove-Item Env:JAVA_HOME, Env:SPRING_SERVER_PORT, Env:VINCONOMY_DB_HOST, Env:VINCONOMY_DB_NAME, Env:VINCONOMY_DB_PASS, Env:VINCONOMY_DB_PORT, Env:VINCONOMY_DB_USR -ErrorAction SilentlyContinue

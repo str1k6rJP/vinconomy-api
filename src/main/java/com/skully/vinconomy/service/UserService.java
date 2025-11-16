@@ -1,5 +1,7 @@
 package com.skully.vinconomy.service;
 
+import java.util.List;
+
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,6 +41,16 @@ public class UserService {
 		if (StringUtils.isBlank(password)) {
 			throw new IllegalArgumentException("Password cannot be blank");
 		}
+		
+		List<ApiUser> existingUsers = apiRepo.findByUsernameOrUUID(username, uuid);
+		if (existingUsers.size() > 0) {
+			ApiUser existingUser = existingUsers.get(0);
+			if (existingUser.getUsername().equalsIgnoreCase(username))
+				throw new IllegalArgumentException("Username '" + username + "' already taken");
+			else
+				throw new IllegalArgumentException("UUID '" + uuid + "' already register to a different account");
+		}
+		
 		
 		ApiUser user = new ApiUser();
 		user.setUsername(username.toLowerCase());

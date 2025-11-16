@@ -49,18 +49,7 @@ public class UserController {
 		
 		return userService.registerAPIUser(user);
 	}
-	
-	@GetMapping("/register/{username}")
-	public String registerUser(@PathVariable("username") String username) {
-		UserRegistration reg = new UserRegistration();
-		reg.setUsername(username);
-		reg.setPassword("Admin");
-		reg.setName("Admin");
-		reg.setUuid("Admin");
-		userService.registerAPIUser(reg);
-		return "Created";
-	}
-	
+		
 	@GetMapping()
 	//TODO: Disable after testing. Exposes username/roles
 	public Authentication getUser() {

@@ -44,6 +44,8 @@ public class ApiUserDetailsService implements UserDetailsService {
         ApiUserDetails details = new ApiUserDetails(user.getUsername(), user.getPassword(), authorities);
         details.setUser(user);
         
+        
+        
         return details;
     }
     

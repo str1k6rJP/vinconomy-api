@@ -12,8 +12,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.skully.vinconomy.model.dto.SearchOptions;
 import com.skully.vinconomy.model.dto.SearchResult;
-import com.skully.vinconomy.model.dto.ShopPurchaseUpdate;
-import com.skully.vinconomy.model.dto.ShopTradeUpdate;
+import com.skully.vinconomy.model.dto.shop.ShopPurchaseUpdate;
+import com.skully.vinconomy.model.dto.shop.ShopPurchaseUpdateResponse;
+import com.skully.vinconomy.model.dto.shop.ShopTradeUpdate;
 import com.skully.vinconomy.security.ApiKeyAuthentication;
 import com.skully.vinconomy.service.MarketService;
 
@@ -32,7 +33,7 @@ public class MarketController {
 	
 	@PreAuthorize("hasAuthority('GAME_API')")
 	@PostMapping("/purchase")
-	public String purchaseItems(@RequestBody List<ShopPurchaseUpdate> updates, ApiKeyAuthentication auth) {
+	public List<ShopPurchaseUpdateResponse> purchaseItems(@RequestBody List<ShopPurchaseUpdate> updates, ApiKeyAuthentication auth) {
 		return marketService.purchaseItems(updates, auth.getNode());
 	}
 	
@@ -70,7 +71,7 @@ public class MarketController {
 	 */
 	@PreAuthorize("hasAuthority('GAME_API')")
 	@GetMapping("/purchases/completed")
-	public String getAcceptedPurchases(@RequestBody List<ShopPurchaseUpdate> updates, ApiKeyAuthentication auth) {
+	public List<ShopPurchaseUpdateResponse> getAcceptedPurchases(@RequestBody List<ShopPurchaseUpdate> updates, ApiKeyAuthentication auth) {
 		return marketService.purchaseItems(updates, auth.getNode());
 	}
 	

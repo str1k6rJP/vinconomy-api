@@ -1,5 +1,7 @@
 package com.skully.vinconomy.model;
 
+import java.util.Objects;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.skully.vinconomy.enums.ApiRole;
 
@@ -70,5 +72,24 @@ public class ApiUser {
 	public void setUuid(String uuid) {
 		this.uuid = uuid;
 	}
+	@Override
+	public int hashCode() {
+		return Objects.hash(disabled, id, name, password, role, username, uuid);
+	}
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		ApiUser other = (ApiUser) obj;
+		return disabled == other.disabled && id == other.id && Objects.equals(name, other.name)
+				&& Objects.equals(password, other.password) && role == other.role
+				&& Objects.equals(username, other.username) && Objects.equals(uuid, other.uuid);
+	}
+	
+	
 	
 }

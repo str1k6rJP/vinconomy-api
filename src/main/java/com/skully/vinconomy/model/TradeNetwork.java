@@ -2,6 +2,7 @@ package com.skully.vinconomy.model;
 
 import com.skully.vinconomy.enums.AsyncType;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -24,6 +25,7 @@ public class TradeNetwork {
 	
 	private String description;
 	
+	@Column(unique=true)
 	private String networkAccessKey;
 	
 	private boolean autoAcceptRequests;

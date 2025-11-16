@@ -1,9 +1,9 @@
-package com.skully.vinconomy.model.dto;
+package com.skully.vinconomy.model.dto.shop;
 
 import com.skully.vinconomy.enums.TradeStatus;
 
 public class ShopPurchaseUpdate {
-	private String nodeId;
+	private String nodeGuid;
 	private long shopId;
 	private int amount;
 	private int X;
@@ -14,11 +14,11 @@ public class ShopPurchaseUpdate {
 	private String playerGuid;
 	private TradeStatus status;
 	
-	public String getNodeId() {
-		return nodeId;
+	public String getNodeGuid() {
+		return nodeGuid;
 	}
 	public void setNodeId(String nodeId) {
-		this.nodeId = nodeId;
+		this.nodeGuid = nodeId;
 	}
 	public long getShopId() {
 		return shopId;

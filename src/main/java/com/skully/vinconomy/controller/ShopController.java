@@ -2,9 +2,12 @@ package com.skully.vinconomy.controller;
 
 import java.util.List;
 
+import com.skully.vinconomy.model.ShopProduct;
+import com.skully.vinconomy.model.dto.shop.ShopStall;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -14,16 +17,17 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.skully.vinconomy.model.Shop;
 import com.skully.vinconomy.model.ShopRegistration;
 import com.skully.vinconomy.model.ShopTrade;
-import com.skully.vinconomy.model.dto.ShopUpdate;
-import com.skully.vinconomy.model.dto.ShopTradeRequest;
-import com.skully.vinconomy.model.dto.ShopTradeStatusUpdate;
-import com.skully.vinconomy.model.dto.TradeNetworkShop;
+import com.skully.vinconomy.model.dto.shop.ShopTradeRequest;
+import com.skully.vinconomy.model.dto.shop.ShopTradeStatusUpdate;
+import com.skully.vinconomy.model.dto.shop.ShopUpdate;
+import com.skully.vinconomy.model.dto.tradenetwork.TradeNetworkShop;
 import com.skully.vinconomy.security.ApiKeyAuthentication;
 import com.skully.vinconomy.service.ShopService;
 
@@ -34,9 +38,10 @@ public class ShopController {
 	@Autowired
 	ShopService shopService;
 	
+	@PreAuthorize("hasAuthority('GAME_API')")
 	@GetMapping("/list")
-	public String getShops() {
-		return "Blah";
+	public List<Shop> getShops(ApiKeyAuthentication auth) {
+		return shopService.getAllShops(auth);
 	}
 	
 	@PreAuthorize("hasAuthority('GAME_API')")
@@ -60,10 +65,17 @@ public class ShopController {
 	
 	@PreAuthorize("hasAuthority('GAME_API')")
 	@PatchMapping("/products/{shopId}")
-	//TODO: Perhaps it should be List<ShopProducts> instead?
 	public String updateShopProducts(@RequestBody() ShopUpdate reg, @PathVariable("shopId") int shopId, ApiKeyAuthentication auth) {
-		//ApiKeyAuthentication auth = (ApiKeyAuthentication) SecurityContextHolder.getContext().getAuthentication();
 		return shopService.updateProducts(reg, auth.getNode());
+	}
+	
+	@PreAuthorize("hasAuthority('GAME_API')")
+	@PatchMapping("/products")
+	public String updateShopProducts(@RequestBody() List<ShopUpdate> updates, ApiKeyAuthentication auth) {
+		for (ShopUpdate update : updates) {
+			shopService.updateProducts(update, auth.getNode());
+		}
+		return null;
 	}
 	
 	@PreAuthorize("hasAuthority('GAME_API')")
@@ -74,12 +86,14 @@ public class ShopController {
 	
 	/**
 	 * Gets the current inventory for the given shop register
+     * @param includeEmptyTrades if true, trades with product and currency empty will be omitted
 	 * @return
 	 */
 	@PreAuthorize("hasAuthority('GAME_API')")
 	@GetMapping("/inventory/{networkId}/{shopId}")
-	public TradeNetworkShop getShopInventory(@PathVariable("networkId") String networkId, @PathVariable("shopId") int shopId) {
-		return shopService.getShopInventory(networkId, shopId);
+	public TradeNetworkShop getShopInventory(@PathVariable("networkId") String networkId, @PathVariable("shopId") int shopId,
+                                             @RequestParam(value = "emptyTrades",defaultValue = "false") Boolean includeEmptyTrades) {
+		return shopService.getShopInventory(networkId, shopId, includeEmptyTrades != null && includeEmptyTrades);
 	}
 	
 	/**
@@ -87,10 +101,17 @@ public class ShopController {
 	 * @return
 	 */
 	@PreAuthorize("hasAuthority('GAME_API')")
-	@GetMapping("/inventory/{networkId}/{shopId}/{x}/{y}/{z}")
-	public String getShopStallInventory(@PathVariable("networkId") String networkId, @PathVariable("shopId") int shopId, @PathVariable("x") int x, @PathVariable("y") int y, @PathVariable("z") int z, ApiKeyAuthentication auth) {
-		throw new ResponseStatusException(HttpStatus.NOT_IMPLEMENTED);
+	@GetMapping("/stall/inventory/{nodeId}/{shopId}/{x}/{y}/{z}")
+	public List<ShopProduct> getShopStallInventory(@PathVariable("nodeId") long nodeId, @PathVariable("shopId") int shopId, @PathVariable("x") int x, @PathVariable("y") int y, @PathVariable("z") int z,
+                                                   @RequestParam(value = "emptyTrades",defaultValue = "false") Boolean includeEmptyTrades) {
+        return shopService.getStallInventory(nodeId,shopId,x,y,z,includeEmptyTrades != null && includeEmptyTrades);
 	}
+
+    @PreAuthorize("hasAuthority('GAME_API')")
+    @PutMapping("/stall/{nodeId}")
+    public List<ShopProduct> fullUpdateShopStallInventory(@PathVariable("nodeId") long nodeId, @RequestBody ShopStall stall, ApiKeyAuthentication auth) {
+        return shopService.authoritativeShopStallUpdate(nodeId,stall,auth);
+    }
 	
 	
 	/**

@@ -1,4 +1,4 @@
-package com.skully.vinconomy.model.dto;
+package com.skully.vinconomy.model.dto.tradenetwork;
 
 import com.skully.vinconomy.enums.AsyncType;
 
@@ -10,7 +10,9 @@ public class TradeNetworkRegistration {
 	private boolean moddedItemsAllowed;
 	private AsyncType asyncType;
 	private boolean visible;
-
+	private String customAccessKey; 
+	private String owner;
+	
 	public String getName() {
 		return name;
 	}
@@ -58,6 +60,20 @@ public class TradeNetworkRegistration {
 	public void setAsyncType(AsyncType asyncType) {
 		this.asyncType = asyncType;
 	}
-	
-	
+
+	public String getCustomAccessKey() {
+		return customAccessKey;
+	}
+
+	public void setCustomAccessKey(String customAccessKey) {
+		this.customAccessKey = customAccessKey;
+	}
+
+	public String getOwner() {
+		return owner;
+	}
+
+	public void setOwner(String owner) {
+		this.owner = owner;
+	}
 }

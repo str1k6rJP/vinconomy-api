@@ -5,6 +5,8 @@ import java.sql.Timestamp;
 import com.skully.vinconomy.enums.TradeStatus;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -16,14 +18,14 @@ public class ShopTrade {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private long id;
-	
+	@Enumerated(EnumType.STRING)
 	private TradeStatus status;
 	@ManyToOne
 	private Shop shop;
 	@ManyToOne
-	private TradeNetworkNode requestingNode;
+	private TradeNetworkNode requestingNode; // The network node that requested the trade
 	@ManyToOne
-	private TradeNetworkNode originNode;
+	private TradeNetworkNode originNode; // The network node that the requestingNode is buying from
 	private int x;
 	private int y;
 	private int z;

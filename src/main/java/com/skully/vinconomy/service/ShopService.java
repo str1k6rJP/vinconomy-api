@@ -1,21 +1,5 @@
 package com.skully.vinconomy.service;
 
-import java.sql.Timestamp;
-import java.time.Instant;
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
-
 import com.skully.vinconomy.dao.ShopProductRepository;
 import com.skully.vinconomy.dao.ShopRepository;
 import com.skully.vinconomy.dao.ShopTradeRepository;
@@ -28,12 +12,30 @@ import com.skully.vinconomy.model.ShopProductId;
 import com.skully.vinconomy.model.ShopRegistration;
 import com.skully.vinconomy.model.ShopTrade;
 import com.skully.vinconomy.model.TradeNetworkNode;
+import com.skully.vinconomy.model.builder.ShopProductBuilder;
 import com.skully.vinconomy.model.dto.Product;
-import com.skully.vinconomy.model.dto.ShopUpdate;
-import com.skully.vinconomy.model.dto.ShopStall;
-import com.skully.vinconomy.model.dto.ShopTradeRequest;
-import com.skully.vinconomy.model.dto.TradeNetworkShop;
+import com.skully.vinconomy.model.dto.shop.ShopStall;
+import com.skully.vinconomy.model.dto.shop.ShopTradeRequest;
+import com.skully.vinconomy.model.dto.shop.ShopUpdate;
+import com.skully.vinconomy.model.dto.tradenetwork.TradeNetworkShop;
+import com.skully.vinconomy.security.ApiKeyAuthentication;
 import com.skully.vinconomy.util.GameUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class ShopService {
@@ -55,12 +57,17 @@ public class ShopService {
 	TradeNetworkNodeRepository tradeNetworkDao;
 	
 	public Shop registerShop(ShopRegistration reg, TradeNetworkNode node) {
+		
+		if (reg.getId() <= 0) {
+			throw new IllegalArgumentException("ID cannot be less than 1");
+		}
+		
 		ShopId id = new ShopId(node.getId(), reg.getId());
 		Shop shop;
 		Optional<Shop> existing = shopDao.findById(id);
 		if (existing.isPresent()) {
 			shop = existing.get();
-			
+
 		} else {
 			shop = new Shop(id);
 		}
@@ -74,6 +81,11 @@ public class ShopService {
 	public String updateProducts(ShopUpdate update, TradeNetworkNode node) {
 		long serverId = node.getId();
 		int shopId = update.getId();
+
+		if (shopId <= 0) {
+			throw new IllegalArgumentException("ID cannot be less than 1");
+		}
+		
 		ShopId id = new ShopId(node.getId(), shopId);
 		Shop shop = GameUtils.getOptional(shopDao.findById(id));
 		if (shop == null) {
@@ -112,11 +124,9 @@ public class ShopService {
 				for (Product productUpdate : productUpdates) {
 					ShopProduct prod = productMap.get(productUpdate.getStallSlot());
 					if (prod == null) {
-						logger.info("No product found for slot {} at {} {} {} on server {} - Creating!", productUpdate.getStallSlot(), stall.getX(), stall.getY(), stall.getZ(), serverId );
-						ShopProductId productId = new ShopProductId(serverId, shopId, stall.getX(), stall.getY(), stall.getZ(), productUpdate.getStallSlot());
-						prod = new ShopProduct();
-						prod.setId(productId);
-						productMap.put(productUpdate.getStallSlot(), prod);
+                        logger.debug("No product found for slot {} at {} {} {} on server {} - Skipping!", productUpdate.getStallSlot(), stall.getX(), stall.getY(), stall.getZ(),
+                                serverId);
+                        continue;
 					} else if (prod.getId().getShopId() != shopId) {
 						logger.info("Product for different shop {} for slot {} at {} {} {} on server {} - Updating to {}!", prod.getId().getShopId(), productUpdate.getStallSlot(), stall.getX(), stall.getY(), stall.getZ(), serverId, shopId );
 						removalList.add(prod);
@@ -253,7 +263,17 @@ public class ShopService {
 		
 	}
 
-	public TradeNetworkShop getShopInventory(String networkGuid, int shopId) {
+    /**
+     * Returns the shop inventory
+     * Boolean flag is used to exclude empty trades (where both product and currency are empty,
+     * as they clutter visual space and don't carry anu useful load
+     *
+     * @param networkGuid        guid
+     * @param shopId             shop id inside network
+     * @param includeEmptyTrades if to include empty trades
+     * @return the shop object with specified trades
+     */
+    public TradeNetworkShop getShopInventory(String networkGuid, int shopId, boolean includeEmptyTrades) {
 
 		TradeNetworkNode node = tradeNetworkDao.findByGuid(networkGuid);
 		if (node == null) 
@@ -273,11 +293,69 @@ public class ShopService {
 		shop.serverName = node.getServerName();
 		shop.name = networkShop.getName();
 		shop.owner = networkShop.getOwner();
-		List<ShopProduct> products = productDao.findByNodeIdAndShopId(node.getId(), shopId);
-		shop.products = products;
+        shop.products = includeEmptyTrades
+                        ? productDao.findByNodeIdAndShopId(node.getId(), shopId)
+                        : productDao.findByNodeIdAndShopIdExcludeEmptyTrades(node.getId(), shopId);
 		shop.lastUpdatedTimestamp = node.getLastAccessed().getTime();
 		
 		return shop;
 	}
+
+    /**
+     * Returns registered trade for the specified shop.
+     *
+     * @param nodeId
+     * @param x
+     * @param y
+     * @param z
+     * @param includeEmptyTrades
+     * @return list of found trades for given stall; if no rows, will be empty
+     */
+    public List<ShopProduct> getStallInventory(long nodeId, long shopId, int x, int y, int z, boolean includeEmptyTrades) {
+        return includeEmptyTrades
+               ? productDao.findAllByStallId(nodeId, shopId, x, y, z)
+               : productDao.findAllByStallIdExcludeEmptyTrades(nodeId, shopId, x, y, z);
+    }
+
+    public List<Shop> getAllShops(ApiKeyAuthentication auth) {
+        return shopDao.findAllByNetwork(auth.getNode().getNetwork().getId());
+    }
+
+	public Shop getShopById(long id, long shopId) {
+		return GameUtils.getOptional(shopDao.findById(new ShopId(id, shopId)));
+
+    }
+
+    protected boolean shopExists(long nodeId, long shopId) {
+        return shopDao.shopExists(nodeId, shopId) == 1;
+    }
+
+    public List<ShopProduct> authoritativeShopStallUpdate(long shopId, ShopStall stall, ApiKeyAuthentication auth) {
+        var node = auth.getNode();
+        var nodeId = node.getId();
+        if (!shopExists(nodeId, shopId)) {
+            logger.info("No Shop with id {} exists for Node id:{} name:{}", shopId, nodeId, node.getServerName());
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No such Shop exists for the Node");
+        }
+        var rows = getStallInventory(nodeId, shopId, stall.getX(), stall.getY(), stall.getZ(), true);
+
+        if (stall.getProducts().isEmpty()) {
+            productDao.deleteByStall(nodeId, stall.getX(), stall.getY(), stall.getZ());
+        } else {
+            var newSlots = stall.getProducts().stream().map(Product::getStallSlot).collect(Collectors.toUnmodifiableSet());
+            rows.stream().filter(p -> !newSlots.contains(p.getId().getStallSlot())).forEach(productDao::delete);
+            stall.getProducts().stream().map(p -> new ShopProductBuilder()
+                            .withId(new ShopProductId(nodeId, shopId, stall.getX(), stall.getY(), stall.getZ(), p.getStallSlot()))
+                            .withCurrency(p.getCurrencyCode(), p.getCurrencyName(), p.getCurrencyQuantity())
+                            .withCurrencyAttributes(p.getCurrencyAttributes())
+                            .withProduct(p.getProductCode(), p.getProductName(), p.getProductQuantity())
+                            .withProductAttributes(p.getProductAttributes())
+                            .withTotalStock(p.getTotalStock())
+                            .build())
+                    .forEach(productDao::save);
+        }
+
+        return getStallInventory(nodeId, shopId, stall.getX(), stall.getY(), stall.getZ(), false);
+    }
 
 }

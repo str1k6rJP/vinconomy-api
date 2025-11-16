@@ -7,4 +7,4 @@ VINCONOMY_DB_PASS='password'
 VINCONOMY_DB_USR='user'
 VINCONOMY_DB_PORT=3307
 
-./mvnw clean package
+./mvnw clean package -P docker

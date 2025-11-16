@@ -1,4 +1,4 @@
-package com.skully.vinconomy.model.dto;
+package com.skully.vinconomy.model.dto.tradenetwork;
 
 public class TradeNetworkJoinRequest {
 	private String networkAccessKey;

@@ -1,9 +1,11 @@
 package com.skully.vinconomy.model;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinColumns;
+import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 
 @Entity
@@ -14,11 +16,15 @@ public class ShopProduct {
 	private String productName;
 	private String productCode;
 	private int productQuantity;
+    @Lob
+    @Column(length = 65535)
 	private String productAttributes;
 	
 	private String currencyName;
 	private String currencyCode;
 	private int currencyQuantity;
+    @Lob
+    @Column(length = 65535)
 	private String currencyAttributes;
 	
 	private int totalStock;

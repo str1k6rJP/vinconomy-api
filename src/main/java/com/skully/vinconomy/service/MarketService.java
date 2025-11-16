@@ -10,18 +10,21 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.skully.vinconomy.dao.ShopProductRepository;
 import com.skully.vinconomy.dao.ShopRepository;
 import com.skully.vinconomy.dao.ShopTradeRepository;
 import com.skully.vinconomy.dao.TradeNetworkNodeRepository;
 import com.skully.vinconomy.enums.TradeStatus;
 import com.skully.vinconomy.model.Shop;
-import com.skully.vinconomy.model.ShopId;
+import com.skully.vinconomy.model.ShopProduct;
+import com.skully.vinconomy.model.ShopProductId;
 import com.skully.vinconomy.model.ShopTrade;
 import com.skully.vinconomy.model.TradeNetworkNode;
 import com.skully.vinconomy.model.dto.SearchOptions;
 import com.skully.vinconomy.model.dto.SearchResult;
-import com.skully.vinconomy.model.dto.ShopPurchaseUpdate;
-import com.skully.vinconomy.model.dto.ShopTradeUpdate;
+import com.skully.vinconomy.model.dto.shop.ShopPurchaseUpdate;
+import com.skully.vinconomy.model.dto.shop.ShopPurchaseUpdateResponse;
+import com.skully.vinconomy.model.dto.shop.ShopTradeUpdate;
 import com.skully.vinconomy.util.GameUtils;
 
 @Service
@@ -37,23 +40,38 @@ public class MarketService {
 	ShopService shopService;
 	
 	@Autowired
+	ShopProductRepository productDao;
+	
+	@Autowired
 	TradeNetworkNodeRepository nodeDao;
 	
-	public String purchaseItems(List<ShopPurchaseUpdate> updates, TradeNetworkNode node) {
+	public List<ShopPurchaseUpdateResponse> purchaseItems(List<ShopPurchaseUpdate> updates, TradeNetworkNode node) {
+		List<ShopPurchaseUpdateResponse> responses = new LinkedList<>();
 		
 		for (ShopPurchaseUpdate update : updates) {
-			TradeNetworkNode targetNode = nodeDao.findByGuid(update.getNodeId());
+			
+			ShopPurchaseUpdateResponse response = new ShopPurchaseUpdateResponse(update);
+			responses.add(response);
+			
+			TradeNetworkNode targetNode = nodeDao.findByGuid(update.getNodeGuid());
 			if (targetNode == null) {
-				
+				response.setError("Could not find Trade Network Node by GUID " + update.getNodeGuid());
 				continue;
 			}
 			
-			
-			ShopId shopId = new ShopId(targetNode.getId(), update.getShopId());
-			Shop targetShop = GameUtils.getOptional(shopDao.findById(shopId));
+			Shop targetShop =shopService.getShopById(targetNode.getId(), update.getShopId());
 			if (targetShop == null) {
+				response.setError("Could not find Shop by Node ID " + targetNode.getId() + " and Shop ID " + update.getShopId());
 				continue;
 			}
+			
+			ShopProductId id = new ShopProductId(targetNode.getId(), update.getShopId(), update.getX(),update.getY(),update.getZ(),update.getStallSlot());
+			ShopProduct product = GameUtils.getOptional(productDao.findById(id));
+			if (product == null) {
+				response.setError("Could not find Product " + id.toString());
+				continue;
+			}
+			
 			
 			ShopTrade trade = new ShopTrade();
 			trade.setStatus(TradeStatus.PENDING);
@@ -71,9 +89,11 @@ public class MarketService {
 			Timestamp time = Timestamp.from(Instant.now());
 			trade.setCreated(time);
 			trade.setModified(time);
-			tradeDao.save(trade);
+			trade = tradeDao.save(trade);
+			response.updatePurchase(trade);
+			
 		}
-		return null;
+		return responses;
 	}
 
 	public List<ShopTradeUpdate> getPurchasedItems(TradeNetworkNode node) {

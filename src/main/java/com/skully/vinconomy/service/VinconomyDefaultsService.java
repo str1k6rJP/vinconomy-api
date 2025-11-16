@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 
 import com.skully.vinconomy.enums.ApiRole;
 import com.skully.vinconomy.enums.AsyncType;
-import com.skully.vinconomy.model.dto.TradeNetworkRegistration;
+import com.skully.vinconomy.model.dto.tradenetwork.TradeNetworkRegistration;
 
 @Service
 public class VinconomyDefaultsService {
@@ -28,7 +28,7 @@ public class VinconomyDefaultsService {
     		logger.warn("No Administrator account found. Creating default admin account");
     		userService.registerAPIUser( "admin", "Admin1234", ApiRole.SUPERADMIN, "Administrator", null);
     	}
-    	
+    	    	
     	if (tradeNetworkService.findByNetworkAccessKey("GLOBAL") == null) {
     		logger.warn("No Global Trade Network found. Creating default owned by admin account");
     		TradeNetworkRegistration reg = new TradeNetworkRegistration();
@@ -38,8 +38,9 @@ public class VinconomyDefaultsService {
     		reg.setVisible(true);
     		reg.setModdedItemsAllowed(false);
     		reg.setAsyncType(AsyncType.ASYNC);
+    		reg.setCustomAccessKey("GLOBAL");
 
-    		tradeNetworkService.registerTradeNetwork(reg, userService.getApiUser("admin"), "GLOBAL");
+    		tradeNetworkService.registerTradeNetwork(reg, userService.getApiUser("admin"));
     		
     	}
     }
