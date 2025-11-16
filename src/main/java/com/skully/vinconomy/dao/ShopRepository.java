@@ -30,5 +30,11 @@ public interface ShopRepository extends ListCrudRepository<Shop, ShopId> {
 
 	@Query("FROM Shop shop join TradeNetworkNode as node on shop.id.networkNodeId = node.id where node.network.id = :networkId")
 	List<Shop> findAllByNetwork(long networkId);
-	
+
+    @Query("SELECT COUNT(1) FROM TradeNetworkNode n WHERE n.id = :nodeId")
+    int nodeExists(@Param("nodeId") long nodeId);
+
+    @Query("SELECT COUNT(1) FROM Shop s WHERE s.id.networkNodeId = :nodeId AND s.id.shopId = :shopId")
+    int shopExists(@Param("nodeId") long nodeId, @Param("shopId") long shopId);
+
 }
