@@ -1,28 +1,37 @@
 version: '3.9'
 
 services:
-  vinconomy_server:
-    container_name: vinconomy_server
+  vinconomy-server:
+    container_name: vinconomy-server
     build:
       context: .
       dockerfile: Dockerfile
     ports:
       - $VINCONOMY_SERVER_DOCKER_PORT_PAIR
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://vinconomy_db:3306/server_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_URL: jdbc:mysql://vinconomy-db:3306/server_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       SPRING_DATASOURCE_USERNAME: $VINCONOMY_DB_USR
       SPRING_DATASOURCE_PASSWORD: $VINCONOMY_DB_PASS
       SPRING_SERVER_PORT: $VINCONOMY_INTERNAL_SERVER_PORT
       # Optional: customize JVM or Spring profiles
       JAVA_OPTS: "-Xms512m -Xmx1024m"
     depends_on:
-      - vinconomy_db
+      - vinconomy-db
+    networks:
+      - vinconomy-autoshop
     restart: on-failure:3
 
-  vinconomy_db:
+  vinconomy-db:
     extends:
       file: ./mysql/docker-compose.db.yml
-      service: vinconomy_db
+      service: vinconomy-db
+    networks:
+      - vinconomy-autoshop
+    restart: always
 
 volumes:
   mysql_data:
+
+networks:
+  vinconomy-autoshop:
+    driver: bridge

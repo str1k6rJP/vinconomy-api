@@ -40,7 +40,7 @@ For troubleshooting, it's advised to use a commandline tool or a db client to ch
 **Be aware** that after JAR is built, you'll need to kill the container for it to redeploy inside the new network, or configure the network preemptively.
 Killing the container requires Ctrl+C from the shell where the container is running (stopping it), and then executing 
 ```shell
-docker container rm vinconomy_db
+docker container rm vinconomy-db
 ```
 
 ### Building the JAR

@@ -124,9 +124,14 @@ public class ShopService {
 				for (Product productUpdate : productUpdates) {
 					ShopProduct prod = productMap.get(productUpdate.getStallSlot());
 					if (prod == null) {
-                        logger.debug("No product found for slot {} at {} {} {} on server {} - Skipping!", productUpdate.getStallSlot(), stall.getX(), stall.getY(), stall.getZ(),
-                                serverId);
-                        continue;
+                        logger.info("No product found for slot {} at {} {} {} on server {} - Creating!", productUpdate.getStallSlot(), stall.getX(), stall.getY(), stall.getZ(), serverId );
+                        ShopProductId productId = new ShopProductId(serverId, shopId, stall.getX(), stall.getY(), stall.getZ(), productUpdate.getStallSlot());
+                        prod = new ShopProduct();
+                        prod.setId(productId);
+                        productMap.put(productUpdate.getStallSlot(), prod);
+                        // logger.debug("No product found for slot {} at {} {} {} on server {} - Skipping!", productUpdate.getStallSlot(), stall.getX(), stall.getY(), stall.getZ(),serverId);
+                        // continue;
+
 					} else if (prod.getId().getShopId() != shopId) {
 						logger.info("Product for different shop {} for slot {} at {} {} {} on server {} - Updating to {}!", prod.getId().getShopId(), productUpdate.getStallSlot(), stall.getX(), stall.getY(), stall.getZ(), serverId, shopId );
 						removalList.add(prod);

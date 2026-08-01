@@ -1,11 +1,11 @@
 version: '3.9'
 
 services:
-  vinconomy_db:
+  vinconomy-db:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: vinconomy_db
+    container_name: vinconomy-db
     restart: on-failure:3
     ports:
       - $VINCONOMY_DB_DOCKER_PORT_PAIR
